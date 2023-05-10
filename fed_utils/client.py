@@ -14,10 +14,14 @@ class GeneralClient:
     def __init__(self, client_id, model, data_path, output_dir):
         self.client_id = client_id
         self.model = model
-        self.local_data_path = os.path.join(data_path, "local_training_{}.json".format(self.client_id))
+        self.local_data_path = os.path.join(
+            data_path, f"local_training_{self.client_id}.json"
+        )
         self.local_data = load_dataset("json", data_files=self.local_data_path)
         self.output_dir = output_dir
-        self.local_output_dir = os.path.join(self.output_dir, "trainer_saved", "local_output_{}".format(self.client_id))
+        self.local_output_dir = os.path.join(
+            self.output_dir, "trainer_saved", f"local_output_{self.client_id}"
+        )
 
     def preprare_local_dataset(self, generate_and_tokenize_prompt, local_val_set_size):
         if local_val_set_size > 0:
@@ -58,10 +62,10 @@ class GeneralClient:
             save_steps=200,
             output_dir=self.local_output_dir,
             save_total_limit=1,
-            load_best_model_at_end=True if self.local_val_set_size > 0 else False,
+            load_best_model_at_end=self.local_val_set_size > 0,
             ddp_find_unused_parameters=False if ddp else None,
             group_by_length=group_by_length,
-            dataloader_drop_last=False
+            dataloader_drop_last=False,
         )
         self.local_trainer = transformers.Trainer(model=self.model,
                                                   train_dataset=self.local_train_dataset,
@@ -92,13 +96,17 @@ class GeneralClient:
 
         local_dataset_len_dict[self.client_id] = len(self.local_train_dataset)
         new_adapter_weight = self.model.state_dict()
-        single_output_dir = os.path.join(self.output_dir, str(epoch), "local_output_{}".format(self.client_id))
+        single_output_dir = os.path.join(
+            self.output_dir, str(epoch), f"local_output_{self.client_id}"
+        )
         os.makedirs(single_output_dir, exist_ok=True)
-        torch.save(new_adapter_weight, single_output_dir + "/pytorch_model.bin")
+        torch.save(new_adapter_weight, f"{single_output_dir}/pytorch_model.bin")
 
         older_adapter_weight = get_peft_model_state_dict(self.model, self.params_dict_old, "default")
         set_peft_model_state_dict(self.model, older_adapter_weight, "default")
-        previously_selected_clients_set = previously_selected_clients_set | set({self.client_id})
+        previously_selected_clients_set = previously_selected_clients_set | {
+            self.client_id
+        }
         last_client_id = self.client_id
 
         return self.model, local_dataset_len_dict, previously_selected_clients_set, last_client_id

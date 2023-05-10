@@ -13,8 +13,12 @@ def FedAvg(model, selected_clients_set, output_dir, local_dataset_len_dict, epoc
         p=1, dim=0)
 
     for k, client_id in enumerate(selected_clients_set):
-        single_output_dir = os.path.join(output_dir, str(epoch), "local_output_{}".format(client_id),
-                                         "pytorch_model.bin")
+        single_output_dir = os.path.join(
+            output_dir,
+            str(epoch),
+            f"local_output_{client_id}",
+            "pytorch_model.bin",
+        )
         single_weights = torch.load(single_output_dir)
         if k == 0:
             weighted_single_weights = {key: single_weights[key] * (weights_array[k]) for key in

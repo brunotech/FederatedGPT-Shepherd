@@ -58,7 +58,7 @@ if diff_quantity:
             proportions = (np.cumsum(proportions) * len(category_rows_k_index)).astype(int)[:-1]
             idx_partition = [idx_j + idx.tolist() for idx_j, idx in
                              zip(idx_partition, np.split(category_rows_k_index, proportions))]
-            min_size = min([len(idx_j) for idx_j in idx_partition])
+            min_size = min(len(idx_j) for idx_j in idx_partition)
 
         print(min_size)
 
@@ -74,12 +74,10 @@ else:
 
 
 for client_id, idx in enumerate(idx_partition):
-    print(
-        "\n Generating the local training dataset of Client_{}".format(client_id)
-    )
+    print(f"\n Generating the local training dataset of Client_{client_id}")
     sub_remaining_df = remaining_df.loc[idx]
     sub_remaining_df = sub_remaining_df.reset_index().drop('index', axis=1)
     sub_remaining_df_dic = sub_remaining_df.to_dict(orient='records')
 
-    with open(os.path.join(data_path, "local_training_{}.json".format(client_id)), 'w') as outfile:
+    with open(os.path.join(data_path, f"local_training_{client_id}.json"), 'w') as outfile:
         json.dump(sub_remaining_df_dic, outfile)
