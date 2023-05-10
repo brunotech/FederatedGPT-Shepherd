@@ -161,7 +161,7 @@ def fl_finetune(
     print("The process of federated instruction-tuning has started..")
     previously_selected_clients_set = set()
     last_client_id = None
-    local_dataset_len_dict = dict()
+    local_dataset_len_dict = {}
     output_dir = os.path.join(output_dir, str(num_clients))
 
     for epoch in tqdm(range(num_communication_rounds)):
